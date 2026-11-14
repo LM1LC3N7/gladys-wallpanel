@@ -1,177 +1,292 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "WallPanel",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Android wall tablets with WallPanel: sensors, screen, brightness, voice and URL, over MQTT.",
+    "fr": "Tablettes murales Android WallPanel : capteurs, écran, luminosité, voix et URL, en MQTT."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "version": "0.1.0",
+  "docker_image": "ghcr.io/lm1lc3n7/gladys-wallpanel:0.1.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/LM1LC3N7/gladys-wallpanel/main/cover.png",
+  "categories": ["multimedia"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your WallPanel tablets in Gladys",
+        "fr": "Vos tablettes WallPanel dans Gladys"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "WallPanel is an Android app that turns a tablet into a wall dashboard. Gladys reads what it publishes on YOUR MQTT broker (battery, charging, light, temperature, pressure, humidity, camera motion and face detection, screen awake, brightness, page displayed) and sends it commands: wake the screen, brightness, speak a text, show a URL, reload. In WallPanel, turn on MQTT with the same broker and keep the base topic wallpanel/<name>/ (one name per tablet). Nothing goes through the Internet. Never tested with a real tablet. Unofficial, not affiliated with WallPanel.",
+        "fr": "WallPanel est une app Android qui fait d'une tablette un tableau de bord mural. Gladys lit ce qu'elle publie sur VOTRE broker MQTT (batterie, charge, luminosité, température, pression, humidité, mouvement et visage vus par la caméra, écran réveillé, luminosité de l'écran, page affichée) et lui envoie des commandes : réveiller l'écran, luminosité, dire un texte, afficher une URL, recharger. Dans WallPanel, activez MQTT avec le même broker et gardez le sujet de base wallpanel/<nom>/ (un nom par tablette). Rien ne passe par Internet. Jamais testé avec une vraie tablette. Non officiel, sans lien avec WallPanel."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/LM1LC3N7/gladys-wallpanel/blob/main/docs/fr.md",
+          "label": {
+            "en": "Guide (French)",
+            "fr": "Guide (français)"
+          }
+        },
+        {
+          "url": "https://github.com/LM1LC3N7/gladys-wallpanel/blob/main/docs/en.md",
+          "label": {
+            "en": "Guide (English)",
+            "fr": "Guide (anglais)"
+          }
+        },
+        {
+          "url": "https://github.com/TheTimeWalker/wallpanel-android",
+          "label": {
+            "en": "WallPanel",
+            "fr": "WallPanel"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "broker_url",
+      "type": "string",
+      "label": {
+        "en": "MQTT broker address",
+        "fr": "Adresse du broker MQTT"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "The broker WallPanel publishes to (its MQTT settings): its IP address (port 1883), or mqtts://address:8883 in TLS.",
+        "fr": "Le broker où publie WallPanel (ses réglages MQTT) : son adresse IP (port 1883), ou mqtts://adresse:8883 en TLS."
+      },
+      "placeholder": {
+        "en": "192.168.1.20",
+        "fr": "192.168.1.20"
+      },
+      "required": true
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "User name",
+        "fr": "Utilisateur"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "The user of the broker, if it asks for one.",
+        "fr": "L'utilisateur du broker, s'il en demande un."
+      },
+      "required": false
     },
     {
-      "key": "unit",
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password",
+        "fr": "Mot de passe"
+      },
+      "description": {
+        "en": "The password of the broker: kept by Gladys in its database, never shown again, sent only to your broker.",
+        "fr": "Le mot de passe du broker : gardé par Gladys dans sa base, jamais réaffiché, envoyé seulement à votre broker."
+      },
+      "required": false
+    },
+    {
+      "key": "verify_certificate",
+      "type": "boolean",
+      "label": {
+        "en": "Verify the TLS certificate of the broker (mqtts)",
+        "fr": "Vérifier le certificat TLS du broker (mqtts)"
+      },
+      "description": {
+        "en": "Turn off only for a broker with a self-signed certificate on your local network.",
+        "fr": "À désactiver seulement pour un broker au certificat auto-signé sur votre réseau local."
+      },
+      "required": false,
+      "default": true
+    },
+    {
+      "key": "topic_prefix",
+      "type": "string",
+      "label": {
+        "en": "Topic prefix (optional)",
+        "fr": "Préfixe des sujets (facultatif)"
+      },
+      "description": {
+        "en": "Empty: wallpanel, the start of WallPanel's default base topic wallpanel/mywallpanel/. Change it only if the base topics of your tablets start otherwise (home/tablets for home/tablets/kitchen/).",
+        "fr": "Vide : wallpanel, le début du sujet de base par défaut de WallPanel wallpanel/mywallpanel/. À changer seulement si les sujets de base de vos tablettes commencent autrement (maison/tablettes pour maison/tablettes/cuisine/)."
+      },
+      "placeholder": {
+        "en": "wallpanel",
+        "fr": "wallpanel"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
-    },
-    {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms des fonctionnalités"
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français"
+          }
+        },
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
-    }
-  ],
-  "scene_triggers": [
-    {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
-      "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion"
       },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
-        }
-      ],
-      "variables": [
-        {
-          "key": "target",
-          "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
-        }
-      ]
+      "timeout_seconds": 45
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "speak",
+      "label": {
+        "en": "Speak a text on a WallPanel tablet",
+        "fr": "Faire parler une tablette WallPanel"
       },
-      "timeout_seconds": 15,
+      "timeout_seconds": 10,
       "fields": [
         {
-          "key": "device",
+          "key": "tablet",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Tablet",
+            "fr": "Tablette"
+          },
+          "required": true
+        },
+        {
+          "key": "text",
+          "type": "string",
+          "label": {
+            "en": "Text to speak (500 characters at most)",
+            "fr": "Texte à dire (500 caractères au plus)"
+          },
           "required": true
         }
-      ],
-      "outputs": [
+      ]
+    },
+    {
+      "key": "show_url",
+      "label": {
+        "en": "Show a URL on a WallPanel tablet",
+        "fr": "Afficher une URL sur une tablette WallPanel"
+      },
+      "timeout_seconds": 10,
+      "fields": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "tablet",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Tablet",
+            "fr": "Tablette"
+          },
+          "required": true
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "URL (http:// or https://)",
+            "fr": "URL (http:// ou https://)"
+          },
+          "required": true
         }
       ]
-    }
-  ],
-  "widgets": [
+    },
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "reload_page",
+      "label": {
+        "en": "Reload the page of a WallPanel tablet",
+        "fr": "Recharger la page d'une tablette WallPanel"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "timeout_seconds": 10,
+      "fields": [
+        {
+          "key": "tablet",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Tablet",
+            "fr": "Tablette"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "show_home_page",
+      "label": {
+        "en": "Back to the home page of a WallPanel tablet",
+        "fr": "Revenir à la page d'accueil d'une tablette WallPanel"
+      },
+      "timeout_seconds": 10,
+      "fields": [
+        {
+          "key": "tablet",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Tablet",
+            "fr": "Tablette"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "wake_screen",
+      "label": {
+        "en": "Wake the screen of a WallPanel tablet",
+        "fr": "Réveiller l'écran d'une tablette WallPanel"
+      },
+      "timeout_seconds": 10,
+      "fields": [
+        {
+          "key": "tablet",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Tablet",
+            "fr": "Tablette"
+          },
+          "required": true
+        },
+        {
+          "key": "seconds",
+          "type": "number",
+          "label": {
+            "en": "For how long, in seconds (empty: WallPanel's inactivity time)",
+            "fr": "Pendant combien de secondes (vide : le délai d'inactivité de WallPanel)"
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }

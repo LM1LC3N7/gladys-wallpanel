@@ -1,67 +1,181 @@
-# Template de démonstration
+# WallPanel pour Gladys
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+[WallPanel](https://github.com/TheTimeWalker/wallpanel-android) est une app
+Android libre (Apache-2.0) qui fait d'une tablette un tableau de bord mural :
+elle affiche une page web (votre tableau de bord Gladys, par exemple) en plein
+écran et publie les capteurs de la tablette en MQTT. Cette intégration lit ce
+que WallPanel publie sur **votre** broker MQTT et lui envoie les commandes que
+sa documentation décrit, sur votre réseau local : rien ne passe par Internet.
 
-## Ce que vous obtenez
+Ce que Gladys reçoit, par tablette :
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- **lu** : niveau de batterie, charge, luminosité ambiante, température,
+  pression, humidité (les capteurs que la tablette possède), mouvement et
+  visage vus par la caméra (si activés dans WallPanel), écran réveillé,
+  luminosité de l'écran, page affichée ;
+- **commandes** : réveiller l'écran ou le laisser s'endormir, régler la
+  luminosité, et, dans les scènes, dire un texte, afficher une URL, recharger
+  la page, revenir à la page d'accueil, réveiller l'écran pour une durée.
 
-## Configuration
+Jamais testé avec une vraie tablette : seulement avec un faux broker et un faux
+Gladys, d'après la documentation de WallPanel (`website/docs/remote-control` de
+son dépôt). Non officiel, sans lien avec WallPanel.
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+## Avant de commencer
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+1. Un broker MQTT sur votre réseau (Mosquitto, ou celui de l'intégration MQTT
+   de Gladys), joignable depuis la machine Gladys (port 1883, ou 8883 en TLS).
+2. Dans WallPanel, **Réglages → MQTT** : activez MQTT, saisissez l'adresse du
+   broker (et son utilisateur et son mot de passe s'il en demande). Gardez le
+   sujet de base `wallpanel/<nom>/` et donnez à chaque tablette son propre nom
+   (`cuisine`, `entree`...) : `wallpanel/cuisine/`. Le nom est fait de lettres
+   sans accent, de nombres, de `_` et de `-`.
+3. Dans WallPanel, **Réglages → Capteurs** : activez la publication des
+   capteurs (batterie, luminosité...), et **Réglages → Caméra** pour le
+   mouvement et les visages.
+4. Pour la luminosité : le réglage « utiliser la luminosité de l'écran » de
+   WallPanel doit être actif, et Android doit autoriser WallPanel à modifier
+   les paramètres système.
 
-## Actions
+Vérification rapide depuis une machine du réseau :
+`mosquitto_sub -h <broker> -t 'wallpanel/#' -v` doit afficher les capteurs et
+l'état de la tablette.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+## Réglages
 
-## Scènes
+| Réglage                             | Rôle                                                                                                                                                                                |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adresse du broker MQTT              | L'adresse IP ou le nom du broker (port 1883), ou `mqtts://adresse:8883` en TLS.                                                                                                     |
+| Utilisateur, Mot de passe           | Ceux du broker, s'il en demande. Le mot de passe est gardé par Gladys dans sa base, jamais réaffiché, envoyé seulement à votre broker. Un mot de passe sans utilisateur est refusé. |
+| Vérifier le certificat TLS          | Activé par défaut ; à désactiver seulement pour un broker au certificat auto-signé sur votre réseau local.                                                                          |
+| Préfixe des sujets                  | Vide : `wallpanel`. Seulement si les sujets de base de vos tablettes commencent autrement : `maison/tablettes` pour `maison/tablettes/cuisine/` (un à trois niveaux).               |
+| Langue des noms des fonctionnalités | Français ou anglais.                                                                                                                                                                |
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Le bouton **Tester la connexion** se connecte au broker avec les réglages
+enregistrés, écoute 10 s et nomme les tablettes entendues. WallPanel publie ses
+capteurs à sa propre fréquence de lecture : une tablette qui ne dit rien en
+10 s n'est pas listée (regardez plus tard l'onglet Découverte). Deux tests sont
+espacés d'au moins 10 s.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+## Ajouter une tablette
 
-## Tableau de bord
+Les tablettes apparaissent dans l'onglet Découverte dès qu'elles ont publié
+quelque chose (leurs capteurs, leur état, ou leur sujet `connection`, que le
+broker garde). Cliquez sur « Ajouter à Gladys ». Une tablette a toujours
+« Écran réveillé » et « Luminosité de l'écran » (les commandes marchent avant
+toute lecture), plus les fonctionnalités dont elle a publié une valeur.
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+L'identifiant d'une tablette est le nom dans son sujet de base :
+`tablet:cuisine` pour `wallpanel/cuisine/`. Renommer le sujet de base dans
+WallPanel crée donc un nouvel appareil. 30 tablettes au plus sont suivies.
 
-## Dépannage
+## Fonctionnalités
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+| Fonctionnalité          | Type Gladys               | Lu dans                                     |
+| ----------------------- | ------------------------- | ------------------------------------------- |
+| Écran réveillé          | interrupteur, commandable | `state` → `screenOn`                        |
+| Luminosité de l'écran   | variateur de 1 à 255      | `state` → `brightness`                      |
+| Page affichée           | texte                     | `state` → `currentUrl`, sans ses paramètres |
+| Batterie                | batterie, %               | `sensor/battery` → `value`                  |
+| En charge               | batterie en charge        | `sensor/battery` → `charging`               |
+| Luminosité ambiante     | capteur de lumière, lux   | `sensor/light`                              |
+| Température             | température, °C           | `sensor/temperature`                        |
+| Pression                | pression, hPa             | `sensor/pressure`                           |
+| Humidité                | humidité, %               | `sensor/humidity`                           |
+| Mouvement (caméra)      | capteur de mouvement      | `sensor/motion`                             |
+| Visage détecté (caméra) | capteur de présence       | `sensor/face`                               |
+
+Non lus : le champ magnétique (aucun type Gladys), les QR codes (leur contenu
+peut être n'importe quoi), l'état de la caméra.
+
+La **page affichée** est montrée sans ce qui suit `?` ou `#`, ni utilisateur
+ni mot de passe : une URL de tableau de bord peut porter un jeton. Seuls le
+schéma, l'adresse et le chemin arrivent dans Gladys.
+
+Une valeur hors de sa plage, vide, dans une autre unité que celle de la
+documentation (°F par exemple) ou illisible est inconnue : rien n'est publié,
+la dernière valeur reste. Un niveau de batterie de -1 (Android : « aucun
+niveau ») est inconnu. Les mesures (batterie, luminosité ambiante,
+température, pression, humidité) arrivent dans Gladys au plus toutes les 10 s
+par fonctionnalité ; l'écran, la luminosité de l'écran, la page, le mouvement
+et le visage tout de suite, chaque changement du mouvement et du visage compris
+(un « vrai » bref n'est pas perdu).
+
+WallPanel ne fait jamais garder ses états et ses capteurs par le broker
+(« retained ») : un message d'état ou de capteur gardé vient d'un autre outil,
+peut-être ancien, et n'est jamais lu. Quand Gladys ajoute une tablette plus
+tard, les valeurs lues dans les 2 dernières heures sont envoyées, datées de
+leur lecture (elles ne déclenchent aucune scène).
+
+## Commandes
+
+Depuis la page de l'appareil ou une scène :
+
+- **Écran réveillé** activé : WallPanel réveille l'écran jusqu'à son propre
+  délai d'inactivité ; désactivé : WallPanel laisse l'écran se rendormir à la
+  fin de la mise en veille d'Android (l'écran ne s'éteint pas tout de suite).
+- **Luminosité de l'écran** : de 1 à 255 (0 est envoyé comme 1, le minimum que
+  WallPanel accepte ; au-delà de 255, 255).
+
+Dans les scènes (actions « Intégrations ») :
+
+- **Faire parler une tablette WallPanel** : la voix de la tablette (la synthèse
+  vocale d'Android) dit le texte, 500 caractères au plus (les retours à la
+  ligne deviennent des espaces).
+- **Afficher une URL sur une tablette WallPanel** : `http://` ou `https://`
+  seulement ; une URL avec un utilisateur ou un mot de passe est refusée (il
+  passerait en clair sur le broker).
+- **Recharger la page**, **Revenir à la page d'accueil** (l'URL de lancement
+  réglée dans WallPanel).
+- **Réveiller l'écran**, pendant un nombre de secondes (1 à 86 400), ou vide
+  pour le délai d'inactivité de WallPanel.
+
+Chaque commande est publiée sur `wallpanel/<nom>/command`, sans « retained »
+et en QoS 0 : un broker comme Mosquitto (réglages par défaut) ne la garde pas
+pour une tablette hors ligne, qui ne l'exécute donc pas plus tard. WallPanel ne répond rien en MQTT : une commande remise au broker
+compte comme envoyée, et l'état suivant de la tablette montre ce qu'elle a
+fait. Gladys affiche ce que la tablette indique, jamais une valeur supposée.
+
+Une commande est refusée, **sans rien envoyer**, quand :
+
+- le broker MQTT n'est pas connecté ;
+- WallPanel a dit que la tablette est hors ligne (son sujet `connection`,
+  « offline ») ;
+- plus de 30 commandes sont parties vers cette tablette en une minute (une
+  scène qui boucle) ;
+- la valeur n'est pas valide (voir plus haut).
+
+Quand le broker ne prend pas une commande en 3 s, la réponse dit que la
+tablette la recevra peut-être. Les textes dits et les URL envoyées ne sont
+jamais écrits dans les journaux (seulement le genre de commande).
+
+## Statut et badges
+
+Le statut de l'intégration dit si le broker est joint, combien de tablettes
+sont entendues et combien sont hors ligne. Le badge d'une tablette est
+« injoignable » tant que le broker n'est pas connecté ou que WallPanel dit que
+la tablette est hors ligne.
+
+## En cas de problème
+
+- **Le broker a refusé la connexion** : vérifiez l'utilisateur et le mot de
+  passe. Gladys cesse d'essayer pendant 15 min, puis 1 h, 6 h et toutes les
+  24 h (gardé après un redémarrage) ; enregistrer d'autres identifiants ou
+  appuyer sur « Tester la connexion » réessaie tout de suite.
+- **Broker injoignable** : nouvel essai toutes les 10 s, puis toutes les
+  minutes après 3 échecs d'affilée.
+- **Connecté, mais aucune tablette** : vérifiez que la tablette utilise le même
+  broker, que son sujet de base commence par le préfixe (`wallpanel/` par
+  défaut) et que la publication des capteurs est active.
+- **La luminosité ne change pas** : activez « utiliser la luminosité de
+  l'écran » dans WallPanel et autorisez-le à modifier les paramètres système
+  dans Android.
+- Un message de plus de 64 Ko coupe la connexion au broker (il n'est jamais
+  lu) ; en MQTT 5 (Mosquitto), le broker ne l'envoie même pas.
+
+## Vie privée
+
+Le mot de passe du broker n'est jamais écrit dans les journaux, le statut ni
+`/data`. `/data` ne garde que la pause après un refus des identifiants. Gladys
+n'allume jamais la caméra de la tablette ; seul ce que WallPanel publie
+(mouvement, visage : vrai ou faux) est lu, jamais une image.

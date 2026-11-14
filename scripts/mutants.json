@@ -1,0 +1,206 @@
+[
+  {
+    "name": "retained state or sensor read",
+    "file": "src/app.js",
+    "from": "    if (packet?.retain === true) {",
+    "to": "    if (false) {"
+  },
+  {
+    "name": "command sent to a tablet said offline",
+    "file": "src/app.js",
+    "from": "    if (this.tablets.get(tabletId)?.online === false) {\n      throw",
+    "to": "    if (false) {\n      throw"
+  },
+  {
+    "name": "command sent while the broker is down",
+    "file": "src/app.js",
+    "from": "    if (!client?.connected) {\n      throw new NotSent(COMMAND.reasons.broker",
+    "to": "    if (false) {\n      throw new NotSent(COMMAND.reasons.broker"
+  },
+  {
+    "name": "no command budget per tablet",
+    "file": "src/app.js",
+    "from": "    if (times.length >= LIMITS.commandsPerMinute) {",
+    "to": "    if (false) {"
+  },
+  {
+    "name": "commands retained, QoS 1",
+    "file": "src/app.js",
+    "from": "{ qos: 0, retain: false }",
+    "to": "{ qos: 1, retain: true }"
+  },
+  {
+    "name": "a live message does not bring the tablet back online",
+    "file": "src/app.js",
+    "from": "    this.setOnline(info.tabletId, tablet, true);\n",
+    "to": ""
+  },
+  {
+    "name": "measurements not spaced",
+    "file": "src/app.js",
+    "from": "        throttle: FEATURES[key].kind === 'measurement',",
+    "to": "        throttle: false,"
+  },
+  {
+    "name": "motion transitions merged",
+    "file": "src/app.js",
+    "from": "        transitions: TRANSITIONS.has(key),",
+    "to": "        transitions: false,"
+  },
+  {
+    "name": "old values sent to a device created later",
+    "file": "src/app.js",
+    "from": "      if (!latest || mono - latest.mono > TIMINGS.catchUpMaxAge) {",
+    "to": "      if (!latest) {"
+  },
+  {
+    "name": "catch-up sent as new (no created_at)",
+    "file": "src/app.js",
+    "from": "        created_at: new Date(Math.min(latest.at, this.now())).toISOString(),\n",
+    "to": ""
+  },
+  {
+    "name": "screen value not checked",
+    "file": "src/app.js",
+    "from": "      if (value !== 0 && value !== 1) {",
+    "to": "      if (false) {"
+  },
+  {
+    "name": "a foreign or odd device id taken",
+    "file": "src/app.js",
+    "from": "    return isTabletId(id) ? id : undefined;",
+    "to": "    return id;"
+  },
+  {
+    "name": "no cap on the tablets",
+    "file": "src/app.js",
+    "from": "    if (this.tablets.size >= LIMITS.tablets) {",
+    "to": "    if (false) {"
+  },
+  {
+    "name": "payload size not bounded",
+    "file": "src/app.js",
+    "from": "  if (!payload || payload.length > LIMITS.payloadBytes) {",
+    "to": "  if (!payload) {"
+  },
+  {
+    "name": "refused credentials stop ignored",
+    "file": "src/app.js",
+    "from": "    if (wait > 0) {",
+    "to": "    if (false) {"
+  },
+  {
+    "name": "no cooldown on the test button",
+    "file": "src/app.js",
+    "from": "    if (this.lastTest !== undefined && mono - this.lastTest < TIMINGS.testCooldown) {",
+    "to": "    if (false) {"
+  },
+  {
+    "name": "no answer bound on a command",
+    "file": "src/app.js",
+    "from": "      timer = this.timers.setTimeout(maybe, TIMINGS.commandWrite);",
+    "to": "      timer = undefined;"
+  },
+  {
+    "name": "brightness not bounded",
+    "file": "src/tablet.js",
+    "from": "  return Math.min(255, Math.max(1, Math.round(value)));",
+    "to": "  return Math.round(value);"
+  },
+  {
+    "name": "any URL scheme sent",
+    "file": "src/tablet.js",
+    "from": "  if ((url.protocol !== 'http:' && url.protocol !== 'https:') || !url.hostname) {",
+    "to": "  if (!url.hostname) {"
+  },
+  {
+    "name": "URL with a password sent",
+    "file": "src/tablet.js",
+    "from": "  if (url.username || url.password) {\n    return { error: 'url_credentials' };",
+    "to": "  if (false) {\n    return { error: 'url_credentials' };"
+  },
+  {
+    "name": "query of the page displayed kept",
+    "file": "src/tablet.js",
+    "from": "  url.search = '';\n",
+    "to": ""
+  },
+  {
+    "name": "user information of the page displayed kept",
+    "file": "src/tablet.js",
+    "from": "    url.password = '';\n",
+    "to": ""
+  },
+  {
+    "name": "spoken text not bounded",
+    "file": "src/tablet.js",
+    "from": "  return [...text].slice(0, LIMITS.speech).join('');",
+    "to": "  return text;"
+  },
+  {
+    "name": "control characters spoken",
+    "file": "src/tablet.js",
+    "from": "raw.replace(new RegExp(CONTROL.source, 'g'), ' ')",
+    "to": "raw"
+  },
+  {
+    "name": "another unit read as the documented one",
+    "file": "src/tablet.js",
+    "from": "    if (unit && announced !== undefined && announced !== null && announced !== unit) {",
+    "to": "    if (false) {"
+  },
+  {
+    "name": "wake duration not bounded",
+    "file": "src/tablet.js",
+    "from": "  if (value === undefined || !Number.isInteger(value) || value < 1 || value > LIMITS.wakeSeconds) {",
+    "to": "  if (value === undefined) {"
+  },
+  {
+    "name": "loose numbers ('' as 0)",
+    "file": "src/tablet.js",
+    "from": "  return typeof value === 'string' && NUMBER.test(value) ? Number(value) : undefined;",
+    "to": "  return Number(value);"
+  },
+  {
+    "name": "measure range not checked",
+    "file": "src/tablet.js",
+    "from": "    if (value === undefined || value < min || value > max) {",
+    "to": "    if (value === undefined) {"
+  },
+  {
+    "name": "inherited keys read",
+    "file": "src/tablet.js",
+    "from": "const own = (object, key) => (Object.hasOwn(object, key) ? object[key] : undefined);",
+    "to": "const own = (object, key) => object[key];"
+  },
+  {
+    "name": "tablet id not checked",
+    "file": "src/tablet.js",
+    "from": "  if (!isTabletId(rest[0])) {",
+    "to": "  if (false) {"
+  },
+  {
+    "name": "prefix depth not bounded",
+    "file": "src/config.js",
+    "from": "    levels.length > 3 ||",
+    "to": "    false ||"
+  },
+  {
+    "name": "password without user accepted",
+    "file": "src/config.js",
+    "from": "  if (!problem && password !== '' && username === '') {",
+    "to": "  if (false) {"
+  },
+  {
+    "name": "packet guard off",
+    "file": "src/mqtt.js",
+    "from": "      if (length + this.header.length > this.max) {",
+    "to": "      if (false) {"
+  },
+  {
+    "name": "same motion state queued twice",
+    "file": "src/publisher.js",
+    "from": "        if (last?.state === value.state) {",
+    "to": "        if (false) {"
+  }
+]

@@ -5,19 +5,21 @@ contributors.
 
 ## What this is
 
-A Gladys Assistant **external integration**: a Node.js service (Node 22+, ESM,
-no build step) that runs in its own sandboxed Docker container and talks to
-Gladys through
-[`@gladysassistant/integration-sdk`](https://github.com/GladysAssistant/integration-sdk-js),
-its only runtime dependency. It started from the official JavaScript template.
+A Gladys Assistant **external integration** for WallPanel (the Android wall
+tablet app): a Node.js service (Node 22+, ESM, no build step) that runs in its
+own sandboxed Docker container, reads the MQTT topics WallPanel publishes on
+the broker of the user and publishes its documented commands (`mqtt`), and
+talks to Gladys through
+[`@gladysassistant/integration-sdk`](https://github.com/GladysAssistant/integration-sdk-js).
+It started from the official JavaScript template.
 
 ## Commands
 
 ```bash
 npm install
-npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+npm test                                  # node --test, the built-in runner (memcap on this VM)
+node --test test/app.test.js              # one file
+node --test --test-name-pattern "speak"   # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,17 +33,18 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
+index.js                          SDK wiring only (src/handlers.js, handlers before connect())
+src/handlers.js                   the SDK handlers -> WallPanelApp (also used by the tests)
+src/app.js                        broker connection, messages, commands, Discovery, status, test button
+src/tablet.js                     WallPanel topics -> features, strict parsers, buildDevice, commands (pure)
+src/mqtt.js                       mqtt.js over a guarded socket (PacketGuard), MQTT 5 maximumPacketSize
+src/publisher.js                  states within 250/min, measurements 10 s apart (monotonic clock)
+src/store.js                      /data/wallpanel-state.json: the stop after refused credentials only
+src/config.js, src/constants.js   configuration (DEFAULT_CONFIG mirrors the manifest), keys, timings
+src/i18n.js                       feature names, statuses (en/fr)
+scripts/mutants.mjs + .json       mutation check of the guards (not in the image, not in CI)
 docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
-.github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
+test/                             node --test, SDK fake Gladys, fake broker, broker on 127.0.0.1, virtual clock
 ```
 
 ## Rules
@@ -72,5 +75,14 @@ test/                             node --test, against the SDK's fake Gladys (in
   together.
 - **User-facing text** is bilingual (English and French): action messages,
   manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **Commands.** Only the commands WallPanel documents, published on
+  `<prefix>/<tablet>/command`, QoS 0, never retained, from `sendCommand` only
+  (`test/manifest.test.js` counts the `.publish(` calls). Never `eval`,
+  `audio`, `camera`, `settings` nor `clearCache` without a decision of the
+  maintainer. Never log a spoken text nor a URL sent.
+- **Privacy.** The page displayed is published without query, fragment nor
+  user information; QR codes and images are never read.
+- **Freshness.** A retained state or sensor is never read (WallPanel never
+  retains them); only `connection` is read retained.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
-  in English. Tests never touch the network.
+  in English. Tests never leave 127.0.0.1.
