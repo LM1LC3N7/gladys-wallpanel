@@ -3,8 +3,9 @@
 // WallPanel tablets publish: the only network access of the integration. It
 // subscribes to the state, sensor and connection topics of the tablets and
 // publishes only the commands a user or a scene asked for, on
-// <prefix>/<tablet>/command, QoS 0 and never retained (a broker keeps none
-// of them for a tablet offline: nothing runs late).
+// <prefix>/<tablet>/command, QoS 0 and never retained (Mosquitto with its
+// default settings, queue_qos0_messages false, keeps none of them for a
+// tablet offline: nothing runs late; a broker set otherwise may).
 //
 // mqtt.js over a TCP or TLS socket built here, for two reasons:
 //   - every packet the broker sends is bounded BEFORE it is buffered: the

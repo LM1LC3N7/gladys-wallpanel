@@ -2,7 +2,7 @@
 
 [Gladys Assistant](https://gladysassistant.com) external integration for
 **WallPanel** ([TheTimeWalker/wallpanel-android](https://github.com/TheTimeWalker/wallpanel-android),
-Apache-2.0), the Android wall tablet app, over the **local MQTT broker of the
+Apache-2.0, archived upstream, last release v0.12.0), the Android wall tablet app, over the **local MQTT broker of the
 user**: battery, charging, light, temperature, pressure, humidity, camera
 motion and face detection, screen awake, brightness and page displayed of
 each tablet; commands to wake the screen, set the brightness and, in scenes,

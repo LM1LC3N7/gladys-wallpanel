@@ -81,8 +81,9 @@ const binary = (raw) => {
 };
 
 /**
- * The URL a tablet displays, as published to Gladys: scheme, host and path
- * only, never a query, a fragment nor user information. Bounded to
+ * The URL a tablet displays, as published to Gladys: for http(s), scheme,
+ * host and path only, never a query, a fragment nor user information; for
+ * any other scheme (file:, data:, about:...), the scheme alone. Bounded to
  * LIMITS.urlText.
  */
 export function displayedUrl(raw) {
@@ -98,6 +99,10 @@ export function displayedUrl(raw) {
     url = new URL(text);
   } catch {
     return undefined;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    // file:, data:, javascript:...: their content may be anything, the scheme only.
+    return { text: url.protocol };
   }
   url.search = '';
   url.hash = '';

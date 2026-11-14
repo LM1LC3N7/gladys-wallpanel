@@ -5,7 +5,9 @@ Android libre (Apache-2.0) qui fait d'une tablette un tableau de bord mural :
 elle affiche une page web (votre tableau de bord Gladys, par exemple) en plein
 écran et publie les capteurs de la tablette en MQTT. Cette intégration lit ce
 que WallPanel publie sur **votre** broker MQTT et lui envoie les commandes que
-sa documentation décrit, sur votre réseau local : rien ne passe par Internet.
+sa documentation décrit. Rien ne passe par un service tiers de l'intégration :
+seul votre broker est joint, à l'adresse que vous saisissez (sur votre réseau
+local dans l'installation habituelle).
 
 Ce que Gladys reçoit, par tablette :
 
@@ -16,6 +18,8 @@ Ce que Gladys reçoit, par tablette :
 - **commandes** : réveiller l'écran ou le laisser s'endormir, régler la
   luminosité, et, dans les scènes, dire un texte, afficher une URL, recharger
   la page, revenir à la page d'accueil, réveiller l'écran pour une durée.
+
+Le dépôt de WallPanel est archivé : la v0.12.0 est sa dernière version.
 
 Jamais testé avec une vraie tablette : seulement avec un faux broker et un faux
 Gladys, d'après la documentation de WallPanel (`website/docs/remote-control` de
@@ -29,7 +33,9 @@ son dépôt). Non officiel, sans lien avec WallPanel.
    broker (et son utilisateur et son mot de passe s'il en demande). Gardez le
    sujet de base `wallpanel/<nom>/` et donnez à chaque tablette son propre nom
    (`cuisine`, `entree`...) : `wallpanel/cuisine/`. Le nom est fait de lettres
-   sans accent, de nombres, de `_` et de `-`.
+   sans accent, de nombres, de `_` et de `-`. Le sujet de base doit finir par
+   `/` (celui par défaut, `wallpanel/mywallpanel/`, le fait) : WallPanel y
+   colle `state`, `sensor/...` sans séparateur.
 3. Dans WallPanel, **Réglages → Capteurs** : activez la publication des
    capteurs (batterie, luminosité...), et **Réglages → Caméra** pour le
    mouvement et les visages.
@@ -42,6 +48,11 @@ Vérification rapide depuis une machine du réseau :
 l'état de la tablette.
 
 ## Réglages
+
+Le mot de passe du broker circule en clair sur votre réseau avec `mqtt://`
+(comme pour tout client MQTT de ce broker) ; avec `mqtts://` il est protégé par
+TLS, mais si vous coupez la vérification du certificat, il part vers un serveur
+qui n'est pas vérifié.
 
 | Réglage                             | Rôle                                                                                                                                                                                |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -89,8 +100,10 @@ Non lus : le champ magnétique (aucun type Gladys), les QR codes (leur contenu
 peut être n'importe quoi), l'état de la caméra.
 
 La **page affichée** est montrée sans ce qui suit `?` ou `#`, ni utilisateur
-ni mot de passe : une URL de tableau de bord peut porter un jeton. Seuls le
-schéma, l'adresse et le chemin arrivent dans Gladys.
+ni mot de passe : une URL de tableau de bord peut porter un jeton. Pour une page
+`http://` ou `https://`, seuls le schéma, l'adresse et le chemin arrivent dans
+Gladys (le chemin est publié : évitez d'y mettre un jeton) ; pour tout autre
+schéma (`file:`, `data:`...), le schéma seul.
 
 Une valeur hors de sa plage, vide, dans une autre unité que celle de la
 documentation (°F par exemple) ou illisible est inconnue : rien n'est publié,
@@ -103,8 +116,11 @@ et le visage tout de suite, chaque changement du mouvement et du visage compris
 
 WallPanel ne fait jamais garder ses états et ses capteurs par le broker
 (« retained ») : un message d'état ou de capteur gardé vient d'un autre outil,
-peut-être ancien, et n'est jamais lu. Quand Gladys ajoute une tablette plus
-tard, les valeurs lues dans les 2 dernières heures sont envoyées, datées de
+peut-être ancien, et n'est jamais lu. Après un redémarrage de l'intégration,
+l'écran, la luminosité et la page restent donc sans nouvelle valeur jusqu'à ce
+que la tablette publie (WallPanel publie son état à sa connexion MQTT, quand
+l'écran ou la page change, et à chaque lecture de capteurs). Quand Gladys ajoute
+une tablette plus tard, les valeurs lues dans les 2 dernières heures sont envoyées, datées de
 leur lecture (elles ne déclenchent aucune scène).
 
 ## Commandes

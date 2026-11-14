@@ -26,6 +26,9 @@ Handoff document: what is done, what was decided, what comes next.
 ## Decisions
 
 - Version 0.1.0 set by hand (package.json, lock, manifest, docker_image).
+- The upstream WallPanel repository is archived (last commit "This project is
+  now archived"): v0.12.0 is the last release; the integration targets it and
+  no new topic is to expect.
 - WallPanel is Apache-2.0 (LICENSE read at commit 2775abc, release v0.12.0):
   nothing of it is copied; the topics, payloads and commands come from its
   docs (`website/docs/remote-control`), its sources read only to confirm the
@@ -53,8 +56,9 @@ Handoff document: what is done, what was decided, what comes next.
   characters at most.
 - Not read: magneticField (no Gladys type), qrcode (content can be anything),
   camera state. Face detection as `presence-sensor`.
-- The page displayed published without query, fragment nor user information
-  (a dashboard URL may carry a token), 200 characters at most.
+- The page displayed: http(s) without query, fragment nor user information
+  (a dashboard URL may carry a token), 200 characters at most; any other
+  scheme as the scheme alone (review r1 m4).
 - Freshness: retained `state` / `sensor` never read (WallPanel never retains
   them); `connection` read retained (WallPanel's last will). A device created
   later gets the values read in the last 2 h, dated (created_at). Motion and

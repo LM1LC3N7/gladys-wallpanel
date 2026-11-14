@@ -312,7 +312,12 @@ test('commands: at most 30 a minute per tablet, the others still served', async 
     true,
   );
   assert.equal(mqtt.last.published.length, LIMITS.commandsPerMinute + 1);
-  await clock.advance(MINUTE);
+  // Still within the minute 30 s later: refused; past it: accepted.
+  await clock.advance(30 * SECOND);
+  const later = await gladys.fake.sceneAction('reload_page', { tablet: DEVICE() });
+  assert.equal(later.success, false);
+  assert.match(later.error, /plus de 30 commandes/);
+  await clock.advance(31 * SECOND);
   assert.equal((await gladys.fake.sceneAction('reload_page', { tablet: DEVICE() })).success, true);
 });
 
@@ -354,6 +359,61 @@ test('scene actions: speak, URL, reload, home page, wake; texts and URLs never l
   const logs = logger.lines.join('\n');
   assert.ok(!logs.includes('Dinner') && !logs.includes('K3Y'), 'never the text nor the URL');
   assert.match(logs, /Command sent to the tablet kitchen: speak/);
+});
+
+test('a text or a URL with quotes and backslashes stays one value of one key (no injection)', async () => {
+  const device = createdTablet();
+  const { gladys, mqtt } = await setup({ devices: [device] });
+  const texts = ['x", "eval": "y', '"}', 'a\\b\\"c', '{"eval":"alert(1)"}'];
+  for (const text of texts) {
+    assert.equal(
+      (await gladys.fake.sceneAction('speak', { tablet: DEVICE(), text })).success,
+      true,
+    );
+  }
+  const url = 'http://h/a"b\\c", "eval":"x';
+  assert.equal(
+    (await gladys.fake.sceneAction('show_url', { tablet: DEVICE(), url })).success,
+    true,
+  );
+  const payloads = mqtt.last.published.map((p) => JSON.parse(p.payload));
+  assert.deepEqual(
+    payloads.slice(0, texts.length),
+    texts.map((speak) => ({ speak })),
+  );
+  const last = payloads.at(-1);
+  assert.deepEqual(Object.keys(last), ['url']);
+  assert.equal(last.url, new URL(url).href);
+});
+
+test('identity: an odd tablet id, another integration or another tablet: nothing sent', async () => {
+  const kitchen = createdTablet();
+  const bedroom = createdTablet({ tablet: 'bedroom' });
+  const { gladys, mqtt } = await setup({ devices: [kitchen, bedroom] });
+  for (const id of ['a/b', '#', '+', 'a:b', '$SYS', 'a/b/command']) {
+    const ack = await gladys.fake.sceneAction('speak', {
+      tablet: `ext:test-integration:tablet:${id}`,
+      text: 'x',
+    });
+    assert.equal(ack.success, false, id);
+    const odd = { ...kitchen, external_id: `ext:test-integration:tablet:${id}` };
+    const set = await gladys.fake.setValue(odd, { external_id: `${odd.external_id}:screen` }, 1);
+    assert.equal(set.success, false, id);
+  }
+  // Another integration whose selector has the length of ours.
+  const foreign = 'ext:test-integrateX:tablet:kitchen';
+  assert.equal(
+    (await gladys.fake.sceneAction('speak', { tablet: foreign, text: 'x' })).success,
+    false,
+  );
+  const foreignDevice = { ...kitchen, external_id: foreign };
+  const ack = await gladys.fake.setValue(foreignDevice, { external_id: `${foreign}:screen` }, 1);
+  assert.equal(ack.success, false);
+  // The device of kitchen with a feature of bedroom (same id length): refused.
+  const cross = await gladys.fake.setValue(kitchen, featureOf(bedroom, 'screen'), 1);
+  assert.equal(cross.success, false);
+  assert.match(cross.error, /pas de cette/);
+  assert.equal(mqtt.last.published.length, 0);
 });
 
 test('a scene on 5 tablets reaches the 5 of them', async () => {
@@ -459,6 +519,22 @@ test('refused credentials: persisted stop, no retry before 15 min, never the pas
     gladys.fake.requests,
     gladys.fake.connectionStatuses,
     logger.lines,
+  ]);
+  assert.ok(!everything.includes(PASSWORD));
+});
+
+test('a successful connection never logs the password', async () => {
+  const device = createdTablet();
+  const { gladys, mqtt, clock, logger, store } = await setup({ devices: [device] });
+  deliverTablet(mqtt.last);
+  await gladys.fake.setValue(device, featureOf(device, 'screen'), 1);
+  await clock.advance(3 * SECOND);
+  assert.ok(logger.lines.some((l) => /Connected to the MQTT broker/.test(l)));
+  const everything = JSON.stringify([
+    logger.lines,
+    gladys.fake.connectionStatuses,
+    gladys.fake.requests,
+    store.data,
   ]);
   assert.ok(!everything.includes(PASSWORD));
 });

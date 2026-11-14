@@ -5,7 +5,9 @@ Android app (Apache-2.0) that turns a tablet into a wall dashboard: it shows a
 web page (your Gladys dashboard, for example) full screen and publishes the
 sensors of the tablet on MQTT. This integration reads what WallPanel publishes
 on **your** MQTT broker and sends it the commands its documentation
-describes, on your local network: nothing goes through the Internet.
+describes. Nothing goes through a third-party service of the integration:
+only your broker is reached, at the address you type (on your local network
+in the usual setup).
 
 What Gladys gets, per tablet:
 
@@ -16,6 +18,8 @@ What Gladys gets, per tablet:
 - **commands**: wake the screen or let it sleep, set the brightness, and, in
   scenes, speak a text, show a URL, reload the page, go back to the home
   page, wake the screen for a given time.
+
+The WallPanel repository is archived: v0.12.0 is its last release.
 
 Never tested with a real tablet: only with a fake broker and a fake Gladys,
 from the WallPanel documentation (`website/docs/remote-control` of its
@@ -29,6 +33,8 @@ repository). Unofficial, not affiliated with WallPanel.
    broker (and its user name and password if it asks for them). Keep the base
    topic `wallpanel/<name>/` and give each tablet its own name (`kitchen`,
    `hall`...): `wallpanel/kitchen/`. The name is letters, digits, `_` and `-`.
+   The base topic must end with `/` (the default `wallpanel/mywallpanel/`
+   does): WallPanel appends `state`, `sensor/...` to it without a separator.
 3. In WallPanel, **Settings → Sensors**: turn sensor publishing on (battery,
    light...), and **Settings → Camera** for motion and face detection.
 4. For the brightness: WallPanel's "use screen brightness" setting must be on,
@@ -39,6 +45,11 @@ Quick check from a machine of the network:
 state of the tablet.
 
 ## Settings
+
+The password of the broker travels in clear on your network with `mqtt://`
+(as for every MQTT client of that broker); with `mqtts://` it is protected by
+TLS, but if you turn the certificate check off, it leaves to a server that is
+not verified.
 
 | Setting                       | Role                                                                                                                                                                              |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,8 +97,10 @@ Not read: the magnetic field (no Gladys type), the QR codes (their content can
 be anything), the camera state.
 
 The **page displayed** is shown without what follows `?` or `#`, nor a user
-name or password: a dashboard URL may carry a token. Only the scheme, the
-address and the path reach Gladys.
+name or password: a dashboard URL may carry a token. For an `http://` or
+`https://` page, only the scheme, the address and the path reach Gladys (the
+path is published: avoid a token in it); for any other scheme (`file:`,
+`data:`...), the scheme alone.
 
 A value out of its range, empty, of another unit than the documented one
 (°F, for example), or not readable is unknown: nothing is published, the last
@@ -99,7 +112,11 @@ included (a short "true" is not lost).
 
 WallPanel never keeps its states and sensors on the broker ("retained"): a
 retained state or sensor message was left by another tool, maybe long ago,
-and is never read. When Gladys adds a tablet later, the values read in the
+and is never read. So after a restart of the integration, the screen, the
+brightness and the page stay without a new value until the tablet publishes
+again (WallPanel publishes its state when it connects to MQTT, when the
+screen or the page changes, and with every sensor reading). When Gladys adds
+a tablet later, the values read in the
 last 2 hours are sent, dated when they were read (they start no scene).
 
 ## Commands

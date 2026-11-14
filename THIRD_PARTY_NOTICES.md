@@ -6,7 +6,8 @@ This integration is licensed under the Apache License 2.0 (see `LICENSE`).
 
 <https://github.com/TheTimeWalker/wallpanel-android>, the Android wall
 tablet app, is licensed under the Apache License 2.0 (`LICENSE` of its
-repository, read on 2026-11-14 at commit 2775abc; latest release v0.12.0).
+repository, read on 2026-11-14 at commit 2775abc; latest release v0.12.0;
+the repository is archived).
 **No part of WallPanel is included, copied or ported here.** This
 integration only reads, as any MQTT client does, the messages a running
 WallPanel publishes on the broker of the user, and publishes the commands its

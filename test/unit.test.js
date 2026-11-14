@@ -19,6 +19,7 @@ import {
   brightnessValue,
   browseUrl,
   displayedUrl,
+  isTabletId,
   parseObject,
   parseTopic,
   readSensor,
@@ -135,6 +136,30 @@ test('topics: state, sensor/<name>, connection of a safe tablet level; nothing e
   }
 });
 
+test('tablet ids: letters, digits, _ and - only, never a topic separator nor a wildcard', () => {
+  assert.equal(isTabletId('k-1_A'), true);
+  for (const bad of [
+    'a/b',
+    '#',
+    '+',
+    'a+',
+    'a#',
+    '$SYS',
+    'a:b',
+    'a.b',
+    '..',
+    '',
+    'é',
+    'a b',
+    'a\n',
+    'k'.repeat(65),
+    42,
+    null,
+  ]) {
+    assert.equal(isTabletId(bad), false, String(bad));
+  }
+});
+
 test('numbers: strict, never "" read as 0; units checked, never converted', () => {
   assert.equal(strictNumber('2.05'), 2.05);
   assert.equal(strictNumber(-9), -9);
@@ -216,10 +241,10 @@ test('state: screen, brightness, page shown without query, fragment nor password
   assert.deepEqual(readState({ screenOn: 'yes', brightness: 256 }), {});
   assert.deepEqual(readState({ brightness: 12.5 }), {});
   assert.deepEqual(readState({ brightness: '12' }), { brightness: { state: 12 } });
-  assert.deepEqual(displayedUrl('file:///android_asset/index.html?x=1'), {
-    text: 'file:///android_asset/index.html',
-  });
-  assert.deepEqual(displayedUrl('about:blank'), { text: 'about:blank' });
+  assert.deepEqual(displayedUrl('file:///android_asset/index.html?x=1'), { text: 'file:' });
+  assert.deepEqual(displayedUrl('about:blank'), { text: 'about:' });
+  assert.deepEqual(displayedUrl('data:text/html,<b>TOKEN</b>'), { text: 'data:' });
+  assert.deepEqual(displayedUrl('javascript:alert(1)'), { text: 'javascript:' });
   assert.deepEqual(displayedUrl(''), { text: '' });
   assert.equal(displayedUrl('not a url'), undefined);
   assert.equal(displayedUrl('http://a/\u0000'), undefined);

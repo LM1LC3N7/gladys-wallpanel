@@ -14,8 +14,9 @@ the notes of the version's GitHub Release.
 
 - WallPanel tablets read from the local MQTT broker of the user: battery,
   charging, light, temperature, pressure, humidity, camera motion and face
-  detection, screen awake, screen brightness and page displayed (without its
-  query, fragment nor user information).
+  detection, screen awake, screen brightness and page displayed (http/https
+  without query, fragment nor user information; any other scheme as the
+  scheme alone).
 - Commands: wake the screen or let it sleep, screen brightness (1 to 255);
   scene actions to speak a text, show a URL (http/https only), reload the
   page, go back to the home page and wake the screen for a time. QoS 0, never

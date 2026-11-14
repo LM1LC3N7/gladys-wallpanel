@@ -202,5 +202,47 @@
     "file": "src/publisher.js",
     "from": "        if (last?.state === value.state) {",
     "to": "        if (false) {"
+  },
+  {
+    "name": "command JSON with quotes unescaped (r1 I1)",
+    "file": "src/app.js",
+    "from": "client.publish(topic, JSON.stringify(command),",
+    "to": "client.publish(topic, JSON.stringify(command).replace(/\\\\\"/g, '\"'),"
+  },
+  {
+    "name": "tablet id charset widened to # + / (r1 I2)",
+    "file": "src/tablet.js",
+    "from": "new RegExp(`^[A-Za-z0-9_-]{1,${LIMITS.tabletId}}$`)",
+    "to": "new RegExp(`^[A-Za-z0-9_#+/$:-]{1,${LIMITS.tabletId}}$`)"
+  },
+  {
+    "name": "external id prefix not checked (r1 I2)",
+    "file": "src/app.js",
+    "from": "    if (typeof externalId !== 'string' || !externalId.startsWith(prefix)) {",
+    "to": "    if (typeof externalId !== 'string') {"
+  },
+  {
+    "name": "feature of another tablet of the same id length (r1 I2)",
+    "file": "src/app.js",
+    "from": "!featureId.startsWith(`${deviceId}:`)",
+    "to": "featureId.length <= deviceId.length"
+  },
+  {
+    "name": "command window of a second (r1 I3)",
+    "file": "src/app.js",
+    "from": "(t) => mono - t < 60_000 && t <= mono,",
+    "to": "(t) => mono - t < 1_000 && t <= mono,"
+  },
+  {
+    "name": "password in the connection log (r1 m1)",
+    "file": "src/app.js",
+    "from": "`Connected to the MQTT broker ${this.config.brokerUrl} (",
+    "to": "`Connected to the MQTT broker ${this.config.brokerUrl} ${this.config.password} ("
+  },
+  {
+    "name": "any scheme of the page displayed published (r1 m4)",
+    "file": "src/tablet.js",
+    "from": "  if (url.protocol !== 'http:' && url.protocol !== 'https:') {\n    // file:",
+    "to": "  if (false) {\n    // file:"
   }
 ]
