@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-14
+
 ### Added
 
 - WallPanel tablets read from the local MQTT broker of the user: battery,
@@ -29,3 +31,6 @@ the notes of the version's GitHub Release.
   6 h, then every 24 h; messages bounded before they are read (MQTT 5
   `maximumPacketSize` and a guard on the socket); MQTT 3.1.1 fallback.
 - "Test the connection" button naming the tablets heard.
+
+[Unreleased]: https://github.com/LM1LC3N7/gladys-wallpanel/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/LM1LC3N7/gladys-wallpanel/releases/tag/v0.1.1

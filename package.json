@@ -1,6 +1,6 @@
 {
   "name": "gladys-wallpanel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Gladys Assistant external integration for WallPanel, the Android wall tablet app: battery, light, temperature, motion, screen, brightness, page displayed, speech and URL commands, over the local MQTT broker WallPanel publishes to. Unofficial, not affiliated with WallPanel.",
   "type": "module",
